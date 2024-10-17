@@ -1,6 +1,10 @@
+
 const http = require('http');
 const cors = require('cors');
 const express = require('express');
+
+const routes = require('./routes');
+const Database = require('./config/database');
 
 const SocketServer = require('./socket');
 
@@ -8,22 +12,20 @@ const port = process.env.PORT || 3000;
 
 new class App {
     constructor() {
+        Database.conn();
+
         this.app = express();
         this.server = http.createServer(this.app);
         this.app.set('socket', new SocketServer(this.server));
 
-        // const db = new DB(this.app);
-        // db.init();
-
         this.middlewares();
         this.routes();
 
-        // this.app.set("cron", new Cron(this.app));
         this.run();
     }
 
     routes() {
-        // this.app.use('/', routes);
+        this.app.use('/', routes);
     }
 
     middlewares() {

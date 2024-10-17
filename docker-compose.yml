@@ -27,14 +27,14 @@ services:
     networks:
       - opa_chat
 
-  backend:
+  api:
     image: node:20.18.0
-    container_name: opa_chat_backend
+    container_name: opa_chat_api
     working_dir: /app
     ports:
       - 3001:3000
     volumes:
-      - ./backend:/app
+      - ./api:/app
     command: sh -c "npm i --silent && npm run dev"
     depends_on:
       - mongo
@@ -43,7 +43,7 @@ services:
 
   app:
     image: node:20.18.0
-    container_name: test_opa_app
+    container_name: opa_chat_app
     working_dir: /app
     ports:
       - 3000:3000
@@ -51,9 +51,9 @@ services:
       - ./app:/app
     privileged: true
     tty: true
-    command: bash -c "npm i --silent && npm run build && npm run start"
+    command: bash -c "npm i --silent && npm run dev"
     depends_on:
-      - backend
+      - api
     networks:
       - opa_chat
 
