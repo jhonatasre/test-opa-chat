@@ -1,0 +1,65 @@
+version: "3"
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: opa_chat_mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: passwordroot
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - opa_chat
+
+  mongo-express:
+    image: mongo-express:1.0.0
+    container_name: opa_chat_mongo_express
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: passwordroot
+      ME_CONFIG_MONGODB_SERVER: mongo
+    depends_on:
+      - mongo
+    networks:
+      - opa_chat
+
+  backend:
+    image: node:20.18.0
+    container_name: opa_chat_backend
+    working_dir: /app
+    ports:
+      - 3001:3000
+    volumes:
+      - ./backend:/app
+    command: sh -c "npm i --silent && npm run dev"
+    depends_on:
+      - mongo
+    networks:
+      - opa_chat
+
+  app:
+    image: node:20.18.0
+    container_name: test_opa_app
+    working_dir: /app
+    ports:
+      - 3000:3000
+    volumes:
+      - ./app:/app
+    privileged: true
+    tty: true
+    command: bash -c "npm i --silent && npm run build && npm run start"
+    depends_on:
+      - backend
+    networks:
+      - opa_chat
+
+volumes:
+  mongo-data:
+
+networks:
+  opa_chat:
+    driver: bridge
