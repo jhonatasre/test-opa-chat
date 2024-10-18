@@ -15,7 +15,7 @@ export default function Register() {
     const router = useRouter();
 
     useEffect(() => {
-        if (isAuthenticated) {
+        if (isAuthenticated()) {
             router.push('/chat');
         }
     }, [isAuthenticated]);
@@ -50,12 +50,19 @@ export default function Register() {
     }
 
     return (
-        <Container>
+        <Container style={{ backgroundImage: "url('/img/background.jpg')" }} fluid={true}>
             <Row className="d-flex align-items-center min-vh-100">
-                <Col md={{ span: 6, offset: 3 }}>
-                    <Card>
-                        <Card.Body className="">
-                            <h2>Cadastre-se</h2>
+                <Col
+                    xsm={{ span: 10, offset: 1 }}
+                    sm={{ span: 8, offset: 2 }}
+                    md={{ span: 6, offset: 3 }}
+                    lg={{ span: 4, offset: 4 }}
+                >
+                    <Card style={{ borderRadius: 35 }}>
+                        <Card.Body style={{ padding: 75 }}>
+                            <Card.Title className="mb-5">
+                                <h2>Cadastre-se</h2>
+                            </Card.Title>
 
                             <Form onSubmit={handleSubmit} method="POST">
                                 <Form.Group className="mb-3">
@@ -111,7 +118,13 @@ export default function Register() {
                                 </Button>
                             </Form>
                         </Card.Body>
-                        <Card.Footer className="text-muted text-center" onClick={() => router.push('/')}>Já possuo cadastro</Card.Footer>
+                        <Card.Footer
+                            className="text-muted text-center"
+                            onClick={() => router.push('/')}
+                            style={{ padding: 15, cursor: 'pointer' }}
+                        >
+                            Já possuo cadastro
+                        </Card.Footer>
                     </Card>
                 </Col>
             </Row>
