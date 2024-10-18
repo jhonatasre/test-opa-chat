@@ -60,8 +60,8 @@ export default function Register() {
 
                 showToast('Erro!', errorMessage, 'danger', 5000);
             }
-        } catch (error) {
-            showToast('Erro!', error.message, 'danger', 5000);
+        } catch (err) {
+            showToast('Erro!', err.message, 'danger', 5000);
         }
     }
 

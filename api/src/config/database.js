@@ -10,8 +10,8 @@ class Database {
                 useUnifiedTopology: true,
             });
             console.log('--- Conexão com o MongoDB estabelecida com sucesso.');
-        } catch (error) {
-            console.error('--- Erro ao conectar ao MongoDB:', error);
+        } catch (err) {
+            console.error('--- Erro ao conectar ao MongoDB:', err);
         }
     }
 }

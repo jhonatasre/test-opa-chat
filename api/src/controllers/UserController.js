@@ -5,7 +5,7 @@ class UserController {
         try {
             const user = await User.model.find({ _id: { $ne: req.user.id } });
             res.status(200).json(user);
-        } catch (error) {
+        } catch (err) {
             res.status(500).json({ message: `Erro ao enviar mesagem: ${err.message}.` });
         }
     }

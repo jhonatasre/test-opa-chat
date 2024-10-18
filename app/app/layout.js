@@ -1,8 +1,10 @@
 "use client";
 
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./global.css";
+
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
-import "bootstrap/dist/css/bootstrap.min.css";
 import { useEffect } from 'react';
 
 // export const metadata = {

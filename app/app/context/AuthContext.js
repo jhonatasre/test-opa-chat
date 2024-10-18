@@ -70,8 +70,8 @@ export const AuthProvider = ({ children }) => {
             setUser(user);
 
             router.push('/chat');
-        } catch (error) {
-            throw new Error(error.message || 'Erro no processo de login');
+        } catch (err) {
+            throw new Error(err.message || 'Erro no processo de login');
         }
     };
 

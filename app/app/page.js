@@ -1,7 +1,7 @@
 "use client";
 
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import { useAuth } from './context/AuthContext';
 import { useToast } from './context/ToastContext';
 
@@ -36,8 +36,8 @@ export default function Home() {
             await login(username, password);
             router.push('/chat');
             showToast('Sucesso!', 'Login feito com sucesso!', 'success', 10000);
-        } catch (error) {
-            showToast('Erro', error.message, 'danger', 10000);
+        } catch (err) {
+            showToast('Erro', err.message, 'danger', 10000);
         }
     };
 

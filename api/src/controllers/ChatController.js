@@ -19,7 +19,7 @@ class ChatController {
             }
 
             res.status(200).json(chat);
-        } catch (error) {
+        } catch (err) {
             res.status(500).json({ message: `Erro ao carregar chat: ${err.message}.` });
         }
     }
@@ -36,7 +36,11 @@ class ChatController {
             });
 
             if (!chat) {
-                return res.status(404).json({ message: `Chat não encontrado.` });
+                chat = await Chat.model({
+                    participants: [id, userId]
+                });
+
+                chat = await chat.save();
             }
 
             chat.messages.push({
@@ -47,7 +51,7 @@ class ChatController {
             await chat.save();
 
             res.status(200).json(chat);
-        } catch (error) {
+        } catch (err) {
             res.status(500).json({ message: `Erro ao enviar mesagem: ${err.message}.` });
         }
     }
