@@ -1,3 +1,10 @@
 .h-vh-75 {
   height: 75vh;
 }
+
+.toast.bg-primary .toast-body,
+.toast.bg-secondary .toast-body,
+.toast.bg-success .toast-body,
+.toast.bg-danger .toast-body {
+  color: #ffffff
+}
