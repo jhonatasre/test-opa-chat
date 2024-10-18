@@ -2,6 +2,7 @@
 
 import md5 from 'md5';
 import moment from 'moment';
+import io from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useEffect, useState, useRef } from 'react';
@@ -9,6 +10,8 @@ import PrivateRoute from '../components/PrivateRoute';
 
 import * as Icon from 'react-bootstrap-icons';
 import { Form, Button, Row, Container, Card, Col, ListGroup, InputGroup, Image } from 'react-bootstrap';
+
+const socket = io('http://localhost:3001');
 
 export default function Chat() {
     const { user, logout } = useAuth();
@@ -19,6 +22,29 @@ export default function Chat() {
 
     const { showToast } = useToast();
     const messagesEndRef = useRef(null);
+
+    useEffect(() => {
+        socket.on('previousMessages', (messages) => {
+            setListMessages(messages);
+        });
+
+        socket.on('newMessage', (message) => {
+            setListMessages((prevMessages) => [...prevMessages, message]);
+        });
+
+        fetchUsers();
+
+        return () => {
+            socket.off('previousMessages');
+            socket.off('newMessage');
+        };
+    }, []);
+
+    useEffect(() => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [listMessages]);
 
     const fetchUsers = async () => {
         try {
@@ -89,16 +115,6 @@ export default function Chat() {
             return showToast('Erro', `Erro: ${err?.message}`, 'warning', 10000);
         }
     }
-
-    useEffect(() => {
-        fetchUsers();
-    }, []);
-
-    useEffect(() => {
-        if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
-    }, [listMessages]);
 
     return (
         <PrivateRoute>

@@ -1,13 +1,12 @@
-
 const http = require('http');
 const cors = require('cors');
 const express = require('express');
 const passport = require('passport');
 
 const routes = require('./routes');
+const SocketServer = require('./socket');
 const Database = require('./config/database');
 
-const SocketServer = require('./socket');
 
 const port = process.env.PORT || 3000;
 
@@ -38,7 +37,7 @@ new class App {
     }
 
     run() {
-        this.app.listen(port, function () {
+        this.server.listen(port, function () {
             console.log(`--- Servidor inicializado`);
         });
     }

@@ -1,8 +1,13 @@
-const socketIO = require('socket.io');
+const { Server } = require('socket.io');
 
 class SocketServer {
     constructor(server) {
-        this.io = socketIO(server);
+        this.io = new Server(server, {
+            cors: {
+                origin: "*",
+                credentials: true
+            }
+        });
         this.initialize();
     }
 
