@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 
 class User {
@@ -44,6 +45,18 @@ class User {
     async create(data) {
         const user = new this.model(data);
         return await user.save();
+    }
+
+    async comparePassword(plainPassword, hashedPassword) {
+        return await bcrypt.compare(plainPassword, hashedPassword);
+    }
+
+    generateJWT(user) {
+        return jwt.sign(
+            { id: user.id, username: user.username },
+            (process.env.JWT_SECRET || 'my-secret-jwt-token'),
+            { expiresIn: '1h' }
+        );
     }
 }
 

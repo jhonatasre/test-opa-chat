@@ -2,10 +2,8 @@
 
 import { Form, Button, Row, Container, Card, Col } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-
-import styles from '../page.module.css';
 
 export default function Register() {
     const [name, setName] = useState('');
@@ -26,7 +24,7 @@ export default function Register() {
         e.preventDefault();
 
         try {
-            const res = await fetch('http://localhost:3001/user', {
+            const res = await fetch('http://localhost:3001/auth/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -38,7 +36,7 @@ export default function Register() {
                 }),
             });
 
-            const data = await res.json();
+            // const data = await res.json();
 
             if (res.ok) {
                 router.push('/');

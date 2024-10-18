@@ -5,20 +5,30 @@ import { useAuth } from './context/AuthContext';
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react';
 
-import styles from './page.module.css';
-
 export default function Home() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
 
-    const { isAuthenticated } = useAuth();
+    const { login, loading, isAuthenticated } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
-        if (isAuthenticated) {
-            router.push('/chat');
+        if (!loading && !isAuthenticated()) {
+            router.push('/');
         }
-    }, [isAuthenticated]);
+    }, [loading]);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+            login(username, password);
+            router.push('/chat');
+        } catch (error) {
+            console.error('Login falhou:', error);
+            throw new Error('Falha no login:', error);
+        }
+    };
 
     return (
         <Container>
@@ -29,7 +39,7 @@ export default function Home() {
                             <h2>Acese sua conta</h2>
                             <span className="mb-3">Insira suas credenciais para fazer o login</span>
 
-                            <Form>
+                            <Form onSubmit={handleSubmit}>
                                 <Form.Group className="mb-3">
                                     <Form.Label>Usuário</Form.Label>
                                     <Form.Control
@@ -43,7 +53,7 @@ export default function Home() {
                                 <Form.Group className="mb-3">
                                     <Form.Label>Senha</Form.Label>
                                     <Form.Control
-                                        type="text"
+                                        type="password"
                                         name="password"
                                         placeholder="Senha"
                                         onChange={(e) => setPassword(e.target.value)}

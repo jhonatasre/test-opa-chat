@@ -2,6 +2,7 @@
 const http = require('http');
 const cors = require('cors');
 const express = require('express');
+const passport = require('passport');
 
 const routes = require('./routes');
 const Database = require('./config/database');
@@ -31,6 +32,9 @@ new class App {
     middlewares() {
         this.app.use(express.json({ type: 'application/json' }));
         this.app.use(cors({ origin: true, credentials: true }));
+
+        this.app.use(passport.initialize());
+        require('./config/passport')(passport);
     }
 
     run() {

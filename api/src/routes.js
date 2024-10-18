@@ -1,7 +1,10 @@
 const { Router } = require('express');
-require('express-group-routes');
 
+const AuthController = require('./controllers/AuthController');
+const ChatController = require('./controllers/ChatController');
 const UserController = require('./controllers/UserController');
+
+const authMiddleware = require('./middlewares/auth');
 
 const router = Router();
 
@@ -9,17 +12,12 @@ router.get('/', (req, res) => {
     res.status(200).json({ status: 'ok' });
 });
 
-router.get('/user', UserController.get);
-router.post('/user', UserController.create);
+router.post('/auth/login', AuthController.login);
+router.post('/auth/register', AuthController.register);
+router.get('/auth/profile', authMiddleware, AuthController.getProfile);
 
-// const Socket = require('./middlewares/Socket');
+router.get('/user', authMiddleware, UserController.get);
 
-// routes.group("/", (routes) => {
-//     routes.use(Socket.init);
-
-//     routes.get('/', (req, res) => {
-//         res.status(200).json({ status: 'ok' });
-//     });
-// });
-
+router.get('/chat/:id', authMiddleware, ChatController.get);
+router.post('/chat/:id/message', authMiddleware, ChatController.sendMessage);
 module.exports = router;

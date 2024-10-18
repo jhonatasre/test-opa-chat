@@ -9,13 +9,13 @@ const PrivateRoute = ({ children }) => {
     const router = useRouter();
 
     useEffect(() => {
-        if (!isAuthenticated) {
+        if (!isAuthenticated()) {
             router.push('/');
         }
     }, [isAuthenticated, router]);
 
-    if (!isAuthenticated) {
-        return null;
+    if (!isAuthenticated()) {
+        return router.push('/');
     }
 
     return children;
