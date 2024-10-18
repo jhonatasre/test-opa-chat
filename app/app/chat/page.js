@@ -1,6 +1,7 @@
 'use client';
 
 import md5 from 'md5';
+import moment from 'moment';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -13,6 +14,7 @@ export default function Chat() {
     const { user, logout } = useAuth();
     const [users, setUsers] = useState([]);
     const [message, setMessage] = useState('');
+    const [listMessages, setListMessages] = useState([]);
     const [userActive, setUserActive] = useState({ id: '', name: '', username: '' });
 
     const { showToast } = useToast();
@@ -39,7 +41,25 @@ export default function Chat() {
     };
 
     const handleSelectUser = async (user) => {
-        setUserActive(user);
+
+        try {
+            const res = await fetch(`http://localhost:3001/chat/${user.id}`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                },
+            });
+
+            if (!res.ok) {
+                return showToast('Erro', 'Erro ao carregar o chat', 'warning', 10000);
+            }
+
+            const { messages } = await res.json();
+
+            setUserActive(user);
+            setListMessages(messages);
+        } catch (err) {
+            return showToast('Erro', `Erro: ${err?.message}`, 'warning', 10000);
+        }
     }
 
     const sendMessage = async () => {
@@ -88,7 +108,7 @@ export default function Chat() {
                                             )}
                                         </Col>
                                         <Col xs={10} lg={11} className="d-flex flex-column justify-content-center">
-                                            <span>{user ? user.name : ''}</span><br />
+                                            <span><Icon.CircleFill className="text-success" /> {user ? user.name : ''}</span><br />
                                             <small>@{user ? user.username : ''}</small>
                                         </Col>
                                     </Row>
@@ -135,8 +155,32 @@ export default function Chat() {
                                                 <div style={{
                                                     backgroundColor: '#F2F2F2',
                                                     borderRadius: '1rem',
-                                                    height: 'calc(100% - 70px)'
-                                                }}></div>
+                                                    height: 'calc(100% - 70px)',
+                                                    padding: '15px 10px'
+                                                }}>
+                                                    {listMessages.map(message => (
+                                                        <Row className="mb-2">
+                                                            <Col className={
+                                                                `d-flex ${message.sender == user.id ? 'justify-content-end text-end' : ''}`
+                                                            }>
+                                                                <Card className={`${message.sender == user.id ? 'bg-primary text-light' : ''}`}>
+                                                                    <Card.Body>
+                                                                        {message.content}<br />
+                                                                        <small>
+                                                                            {moment(message.timestamp).isSame(moment(), 'day') ? (
+                                                                                "Hoje"
+                                                                            ) : moment(message.timestamp).isSame(moment().subtract(1, 'days'), 'day') ? (
+                                                                                "Ontem"
+                                                                            ) : (
+                                                                                moment(message.timestamp).format('DD/MM/YYYY')
+                                                                            )} - {moment(message.timestamp).format('HH:mm')}
+                                                                        </small>
+                                                                    </Card.Body>
+                                                                </Card>
+                                                            </Col>
+                                                        </Row>
+                                                    ))}
+                                                </div>
                                             </Col>
                                         </Row>
                                     </div>
