@@ -20,7 +20,7 @@ class ChatController {
 
             res.status(200).json(chat);
         } catch (error) {
-            res.status(500).json({ mensagem: 'Erro ao carregar chat:', error });
+            res.status(500).json({ message: `Erro ao carregar chat: ${err.message}.` });
         }
     }
 
@@ -36,7 +36,7 @@ class ChatController {
             });
 
             if (!chat) {
-                return res.status(404).json({ mensagem: 'Chat não encontrado' });
+                return res.status(404).json({ message: `Chat não encontrado.` });
             }
 
             chat.messages.push({
@@ -48,7 +48,7 @@ class ChatController {
 
             res.status(200).json(chat);
         } catch (error) {
-            res.status(500).json({ mensagem: 'Erro ao carregar chat:', error });
+            res.status(500).json({ message: `Erro ao enviar mesagem: ${err.message}.` });
         }
     }
 }

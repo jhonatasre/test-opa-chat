@@ -71,8 +71,7 @@ export const AuthProvider = ({ children }) => {
 
             router.push('/chat');
         } catch (error) {
-            console.error('Erro no processo de login:', error.message);
-            throw new Error('Falha no login:', error);
+            throw new Error(error.message || 'Erro no processo de login');
         }
     };
 

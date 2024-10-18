@@ -1,9 +1,10 @@
 'use client';
 
-import { Form, Button, Row, Container, Card, Col, ListGroup, InputGroup } from 'react-bootstrap';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import PrivateRoute from '../components/PrivateRoute';
-import { useEffect, useState } from 'react';
+
+import { Form, Button, Row, Container, Card, Col, ListGroup, InputGroup } from 'react-bootstrap';
 
 export default function Chat() {
     const { user, logout } = useAuth();

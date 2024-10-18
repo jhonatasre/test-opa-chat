@@ -6,7 +6,7 @@ class UserController {
             const user = await User.model.find({ _id: { $ne: req.user.id } });
             res.status(200).json(user);
         } catch (error) {
-            res.status(500).json({ mensagem: 'Erro ao listar usuários', error });
+            res.status(500).json({ message: `Erro ao enviar mesagem: ${err.message}.` });
         }
     }
 }

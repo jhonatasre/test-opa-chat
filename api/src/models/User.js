@@ -42,11 +42,6 @@ class User {
         this.model = mongoose.model('User', this.schema);
     }
 
-    async create(data) {
-        const user = new this.model(data);
-        return await user.save();
-    }
-
     async comparePassword(plainPassword, hashedPassword) {
         return await bcrypt.compare(plainPassword, hashedPassword);
     }

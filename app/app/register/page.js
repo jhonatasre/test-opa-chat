@@ -1,18 +1,33 @@
 "use client";
 
-import { Form, Button, Row, Container, Card, Col } from 'react-bootstrap';
-import { useAuth } from '../context/AuthContext';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+
+import { Form, Button, Row, Container, Card, Col } from 'react-bootstrap';
+
+import * as yup from 'yup';
+import * as formik from 'formik';
 
 export default function Register() {
-    const [name, setName] = useState('');
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [passwordConfirm, setPasswordConfirm] = useState('');
+    const { Formik } = formik;
 
+    const { showToast } = useToast();
     const { isAuthenticated } = useAuth();
+
     const router = useRouter();
+
+    const schema = yup.object().shape({
+        name: yup.string().required('Nome é obrigatório.'),
+        username: yup.string()
+            .matches(/^[a-zA-Z0-9._-]+$/, 'Nome de usuário deve conter apenas letras, números, pontos, sublinhados e hífens.')
+            .required('Nome de usuário é obrigatório.'),
+        password: yup.string().required('Senha é obrigatória.'),
+        password_confirm: yup.string()
+            .oneOf([yup.ref('password'), null], 'As senhas devem ser iguais.')
+            .required('Confirmação de senha é obrigatória.'),
+    });
 
     useEffect(() => {
         if (isAuthenticated()) {
@@ -20,8 +35,8 @@ export default function Register() {
         }
     }, [isAuthenticated]);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async (values) => {
+        const { name, username, password } = values;
 
         try {
             const res = await fetch('http://localhost:3001/auth/register', {
@@ -36,16 +51,17 @@ export default function Register() {
                 }),
             });
 
-            // const data = await res.json();
-
             if (res.ok) {
                 router.push('/');
-                // setResponse(`Sucesso: ${data.message}`);
+                showToast('Sucesso', 'Cadastro feito com sucesso!', 'success', 5000);
             } else {
-                // setResponse(`Erro: ${data.error}`);
+                const errorResponse = await res.json();
+                const errorMessage = errorResponse.message || 'Erro ao cadastrar. Tente novamente!';
+
+                showToast('Erro!', errorMessage, 'danger', 5000);
             }
         } catch (error) {
-            // setResponse(`Erro: ${error.message}`);
+            showToast('Erro!', error.message, 'danger', 5000);
         }
     }
 
@@ -64,59 +80,86 @@ export default function Register() {
                                 <h2>Cadastre-se</h2>
                             </Card.Title>
 
-                            <Form onSubmit={handleSubmit} method="POST">
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Nome</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        name="name"
-                                        placeholder="Nome"
-                                        onChange={(e) => setName(e.target.value)}
-                                    />
-                                </Form.Group>
-
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Usuário</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        name="username"
-                                        placeholder="Usuário"
-                                        onChange={(e) => setUsername(e.target.value)}
-                                    />
-                                </Form.Group>
-
-                                <Row>
-                                    <Col md={6}>
+                            <Formik
+                                validationSchema={schema}
+                                onSubmit={handleSubmit}
+                                initialValues={{
+                                    name: '',
+                                    username: '',
+                                    password: '',
+                                    passwordConfirm: ''
+                                }}
+                            >
+                                {({ handleSubmit, handleChange, values, errors }) => (
+                                    <Form onSubmit={handleSubmit}>
+                                        <Form.Group className="mb-3" controlId="validationFormik01">
+                                            <Form.Label>Nome</Form.Label>
+                                            <Form.Control
+                                                type="text"
+                                                name="name"
+                                                placeholder="Nome"
+                                                value={values.name}
+                                                onChange={handleChange}
+                                                isInvalid={!!errors.name}
+                                            />
+                                            <Form.Control.Feedback type="invalid">
+                                                {errors.name}
+                                            </Form.Control.Feedback>
+                                        </Form.Group>
 
                                         <Form.Group className="mb-3">
-                                            <Form.Label>Senha</Form.Label>
+                                            <Form.Label>Nome de Usuário</Form.Label>
                                             <Form.Control
-                                                type="password"
-                                                name="password"
-                                                placeholder="Senha"
-                                                onChange={(e) => setPassword(e.target.value)}
+                                                type="text"
+                                                name="username"
+                                                placeholder="Usuário"
+                                                value={values.username}
+                                                onChange={handleChange}
+                                                isInvalid={!!errors.username}
                                             />
+                                            <Form.Control.Feedback type="invalid">
+                                                {errors.username}
+                                            </Form.Control.Feedback>
                                         </Form.Group>
-                                    </Col>
 
-                                    <Col md={6}>
-                                        <Form.Group className="mb-3">
-                                            <Form.Label>Confirme a Senha</Form.Label>
-                                            <Form.Control
-                                                type="password"
-                                                name="password_confirm"
-                                                placeholder="Confirme a Senha"
-                                                onChange={(e) => setPasswordConfirm(e.target.value)}
-                                            />
-                                        </Form.Group>
-                                    </Col>
-                                </Row>
+                                        <Row>
+                                            <Form.Group className="mb-3" as={Col} md={6}>
+                                                <Form.Label>Senha</Form.Label>
+                                                <Form.Control
+                                                    type="password"
+                                                    name="password"
+                                                    placeholder="Senha"
+                                                    value={values.password}
+                                                    onChange={handleChange}
+                                                    isInvalid={!!errors.password}
+                                                />
+                                                <Form.Control.Feedback type="invalid">
+                                                    {errors.password}
+                                                </Form.Control.Feedback>
+                                            </Form.Group>
 
+                                            <Form.Group className="mb-3" as={Col} md={6}>
+                                                <Form.Label>Confirme a Senha</Form.Label>
+                                                <Form.Control
+                                                    type="password"
+                                                    name="password_confirm"
+                                                    placeholder="Confirme a Senha"
+                                                    value={values.password_confirm}
+                                                    onChange={handleChange}
+                                                    isInvalid={!!errors.password_confirm}
+                                                />
+                                                <Form.Control.Feedback type="invalid">
+                                                    {errors.password_confirm}
+                                                </Form.Control.Feedback>
+                                            </Form.Group>
+                                        </Row>
 
-                                <Button variant="outline-dark" type="submit" className="w-100">
-                                    Enviar
-                                </Button>
-                            </Form>
+                                        <Button variant="outline-dark" type="submit" className="w-100">
+                                            Enviar
+                                        </Button>
+                                    </Form>
+                                )}
+                            </Formik>
                         </Card.Body>
                         <Card.Footer
                             className="text-muted text-center"
