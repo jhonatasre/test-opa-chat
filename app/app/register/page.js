@@ -157,6 +157,7 @@ export default function Register() {
                                                     <Button
                                                         variant="outline-secondary"
                                                         onClick={togglePasswordVisibility}
+                                                        style={{ borderRadius: '0 0.375rem 0.375rem 0' }}
                                                     >
                                                         {showPassword ? <Icon.EyeSlash /> : <Icon.Eye />}
                                                     </Button>
@@ -180,6 +181,7 @@ export default function Register() {
                                                     <Button
                                                         variant="outline-secondary"
                                                         onClick={togglePsswordConfirmVisibility}
+                                                        style={{ borderRadius: '0 0.375rem 0.375rem 0' }}
                                                     >
                                                         {showPasswordConfirm ? <Icon.EyeSlash /> : <Icon.Eye />}
                                                     </Button>

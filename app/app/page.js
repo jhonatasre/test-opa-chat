@@ -111,6 +111,7 @@ export default function Home() {
                                                 <Button
                                                     variant="outline-secondary"
                                                     onClick={togglePasswordVisibility}
+                                                    style={{ borderRadius: '0 0.375rem 0.375rem 0' }}
                                                 >
                                                     {showPassword ? <Icon.EyeSlash /> : <Icon.Eye />}
                                                 </Button>

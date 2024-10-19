@@ -53,6 +53,24 @@ class AuthController {
     async getProfile(req, res) {
         res.status(200).json({ user: req.user });
     }
+
+    async updatePassword(req, res) {
+        const { password } = req.body;
+
+        try {
+            const user = await User.model.findById(req.user.id);
+            if (!user) {
+                return res.status(404).json({ message: 'Usuário não encontrado' });
+            }
+
+            user.password = password;
+            await user.save();
+
+            res.status(200).json({ message: "Senha alterada com sucesso!" });
+        } catch (err) {
+            res.status(500).json({ message: `Erro ao registrar usuário: ${err.message}.` });
+        }
+    }
 }
 
 module.exports = new AuthController();
