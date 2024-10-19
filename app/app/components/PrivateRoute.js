@@ -15,7 +15,7 @@ const PrivateRoute = ({ children }) => {
     }, [isAuthenticated, router]);
 
     if (!isAuthenticated()) {
-        return router.push('/');
+        return null;
     }
 
     return children;

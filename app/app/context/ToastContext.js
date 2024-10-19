@@ -1,15 +1,34 @@
 import * as Icon from 'react-bootstrap-icons';
-import { createContext, useContext, useState } from 'react';
 import { Toast, ToastContainer } from 'react-bootstrap';
+import { createContext, useContext, useState } from 'react';
 
 const ToastContext = createContext();
 
 export function ToastProvider({ children }) {
-    const [toastData, setToastData] = useState({ show: false, message: '', title: '', delay: 3000, backgroud: 'light' });
+    const defaultToastData = {
+        show: false,
+        title: '',
+        message: '',
+        delay: 5000,
+        type: 'default',
+        icon: <Icon.SquareFill className="me-2" />
+    };
 
-    const showToast = (title, message, backgroud = 'light', delay = 3000) => {
-        setToastData({ show: true, title, message, delay, backgroud });
-        setTimeout(() => setToastData({ show: false, message: '', title: '', backgroud: 'light' }), delay);
+    const [toastData, setToastData] = useState(defaultToastData);
+
+    const resetToastData = () => setToastData(defaultToastData);
+
+    const showToast = ({ title, message, type = 'default', delay = 5000, icon = <Icon.SquareFill className="me-2" /> }) => {
+        setToastData({
+            show: true,
+            title,
+            message,
+            delay,
+            type,
+            icon
+        });
+
+        setTimeout(resetToastData, delay);
     };
 
     return (
@@ -17,14 +36,14 @@ export function ToastProvider({ children }) {
             {children}
             <ToastContainer position="top-end" className="p-3">
                 <Toast
-                    onClose={() => setToastData({ show: false, message: '', title: '' })}
+                    onClose={resetToastData}
                     show={toastData.show}
                     delay={toastData.delay}
-                    bg={toastData.backgroud}
+                    bg={toastData.type}
                     autohide
                 >
                     <Toast.Header>
-                        <Icon.SquareFill className="me-2" />
+                        {toastData.icon}
                         <strong className="me-auto">{toastData.title}</strong>
                     </Toast.Header>
                     <Toast.Body>{toastData.message}</Toast.Body>

@@ -53,15 +53,30 @@ export default function Register() {
 
             if (res.ok) {
                 router.push('/');
-                showToast('Sucesso', 'Cadastro feito com sucesso!', 'success', 5000);
+                return showToast({
+                    title: 'Sucesso',
+                    message: 'Cadastro feito com sucesso!',
+                    type: 'success',
+                    icon: <Icon.Check2 className="me-2" />
+                });
             } else {
                 const errorResponse = await res.json();
                 const errorMessage = errorResponse.message || 'Erro ao cadastrar. Tente novamente!';
 
-                showToast('Erro!', errorMessage, 'danger', 5000);
+                return showToast({
+                    title: 'Erro',
+                    message: errorMessage,
+                    type: 'danger',
+                    icon: <Icon.XCircleFill className="me-2" />
+                });
             }
         } catch (err) {
-            showToast('Erro!', err.message, 'danger', 5000);
+            return showToast({
+                title: 'Erro',
+                message: `Erro: ${err?.message}`,
+                type: 'danger',
+                icon: <Icon.XCircleFill className="me-2" />
+            });
         }
     }
 

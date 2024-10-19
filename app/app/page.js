@@ -35,9 +35,19 @@ export default function Home() {
         try {
             await login(username, password);
             router.push('/chat');
-            showToast('Sucesso!', 'Login feito com sucesso!', 'success', 10000);
+            showToast({
+                title: 'Sucesso!',
+                message: 'Login feito com sucesso!',
+                type: 'success',
+                icon: <Icon.Check2 className="me-2" />
+            });
         } catch (err) {
-            showToast('Erro', err.message, 'danger', 10000);
+            showToast({
+                title: 'Erro',
+                message: err.message,
+                type: 'danger',
+                icon: <Icon.XCircleFill className="me-2" />
+            });
         }
     };
 

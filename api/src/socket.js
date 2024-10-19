@@ -40,6 +40,7 @@ class SocketServer {
 
         this.io.use(authenticateSocket);
         this.activeUsers = {};
+        this.sessionsUsers = {};
         this.initialize();
     }
 
@@ -73,42 +74,49 @@ class SocketServer {
 
                     await chat.save();
 
+                    const lastMessage = chat.messages[chat.messages.length - 1];
+
                     this.io.to(chatId).emit('newMessage', {
-                        id: chatId,
+                        _id: lastMessage._id,
                         sender: socket.user.id,
                         content,
                         timestamp: Date.now()
                     });
+
+                    let otherParticipantId = chat.participants.filter(p => !p._id.equals(socket.user.id));
+                    otherParticipantId = otherParticipantId[0]._id.toString();
+
+                    if (this.sessionsUsers[otherParticipantId]) {
+                        this.sessionsUsers[otherParticipantId].emit('notificationNewMessage', {
+                            sender: socket.user.id,
+                            title: socket.user.name,
+                            content
+                        });
+                    }
                 }
             });
 
             socket.on('login', async () => {
                 this.activeUsers[socket.user.id] = socket.user.id;
+                this.sessionsUsers[socket.user.id] = socket;
+
                 this.io.emit('activeUsers', Object.values(this.activeUsers));
             });
 
-            socket.on('logout', () => {
-                console.log(`-- Cliente deslogou: ${socket.id}`);
-
-                delete this.activeUsers[socket.user.id];
-                this.io.emit('activeUsers', Object.values(this.activeUsers));
-            });
-
-            socket.on('disconnecting', () => {
-                console.log(`-- Cliente desconectado: ${socket.id}`);
-
-                delete this.activeUsers[socket.user.id];
-                this.io.emit('activeUsers', Object.values(this.activeUsers));
-            });
-
-            socket.on('error', () => {
-                console.log(`-- Cliente desconectado: ${socket.id}`);
-            });
-
-            socket.on('connect_error', (err) => {
-                console.log(`-- Erro de conexão devido a ${err.message}`);
-            });
+            socket.on('error', () => this._disconectUser(socket));
+            socket.on('logout', () => this._disconectUser(socket));
+            socket.on('disconnecting', () => this._disconectUser(socket));
+            socket.on('connect_error', (err) => this._disconectUser(socket, `Erro na conexão (${err.message})`));
         });
+    }
+
+    _disconectUser(socket, message = 'Cliente desconectado') {
+        console.log(`-- ${message}: ${socket.id}`);
+
+        delete this.activeUsers[socket.user.id];
+        delete this.sessionsUsers[socket.user.id];
+
+        this.io.emit('activeUsers', Object.values(this.activeUsers));
     }
 
     getIO() {

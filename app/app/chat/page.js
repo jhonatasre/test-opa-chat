@@ -34,6 +34,19 @@ export default function Chat() {
             setListMessages((prevMessages) => [...prevMessages, message]);
         });
 
+        socket.on('notificationNewMessage', (message) => {
+            const { title, content, sender } = message;
+
+            if (sender != userActive.id) {
+                return showToast({
+                    title,
+                    message: content,
+                    type: 'info',
+                    icon: <Icon.PersonFill className="me-2" />
+                });
+            }
+        });
+
         socket.on('activeUsers', (users) => {
             setActiveUsers(users);
         });
@@ -44,8 +57,10 @@ export default function Chat() {
 
         return () => {
             socket.off('newMessage');
+            socket.off('activeUsers');
+            socket.off('notificationNewMessage');
         };
-    }, []);
+    }, [userActive]);
 
     useEffect(() => {
         if (messagesEndRef.current) {
@@ -62,13 +77,23 @@ export default function Chat() {
             });
 
             if (!res.ok) {
-                return showToast('Erro', 'Erro ao buscar usuários', 'warning', 10000);
+                return showToast({
+                    title: 'Erro',
+                    message: 'Erro ao buscar usuários',
+                    type: 'warning',
+                    icon: <Icon.ExclamationTriangleFill className="me-2" />
+                });
             }
 
             const usersData = await res.json();
             setUsers(usersData);
         } catch (err) {
-            return showToast('Erro', `Erro: ${err?.message}`, 'warning', 10000);
+            return showToast({
+                title: 'Erro',
+                message: `Erro: ${err?.message}`,
+                type: 'danger',
+                icon: <Icon.XCircleFill className="me-2" />
+            });
         }
     };
 
@@ -81,7 +106,12 @@ export default function Chat() {
             });
 
             if (!res.ok) {
-                return showToast('Erro', 'Erro ao carregar o chat', 'warning', 10000);
+                return showToast({
+                    title: 'Erro',
+                    message: 'Erro ao carregar o chat',
+                    type: 'warning',
+                    icon: <Icon.ExclamationTriangleFill className="me-2" />
+                });
             }
 
             const { id, messages } = await res.json();
@@ -93,7 +123,12 @@ export default function Chat() {
             setUserActive(user);
             setListMessages(messages);
         } catch (err) {
-            return showToast('Erro', `Erro: ${err?.message}`, 'warning', 10000);
+            return showToast({
+                title: 'Erro',
+                message: `Erro: ${err?.message}`,
+                type: 'danger',
+                icon: <Icon.XCircleFill className="me-2" />
+            });
         }
     }
 
@@ -107,7 +142,12 @@ export default function Chat() {
             socket.emit('sendMessage', messageData);
             setMessage('');
         } catch (err) {
-            return showToast('Erro', `Erro: ${err?.message}`, 'warning', 10000);
+            return showToast({
+                title: 'Erro',
+                message: `Erro: ${err?.message}`,
+                type: 'danger',
+                icon: <Icon.XCircleFill className="me-2" />
+            });
         }
     }
 
@@ -184,7 +224,7 @@ export default function Chat() {
                                                                 padding: '15px 10px'
                                                             }}>
                                                             {listMessages.map(message => (
-                                                                <Row key={message.id} className="mb-2">
+                                                                <Row key={message._id} className="mb-2">
                                                                     <Col className={
                                                                         `d-flex ${message.sender == user.id ? 'justify-content-end text-end' : ''}`
                                                                     }>
