@@ -13,6 +13,12 @@ export const AuthProvider = ({ children }) => {
     const router = useRouter();
 
     useEffect(() => {
+        if (!loading && !user) {
+            router.push('/');
+        }
+    }, [user, loading, router]);
+
+    useEffect(() => {
         const token = localStorage.getItem('token');
 
         if (token) {

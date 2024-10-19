@@ -11,12 +11,17 @@ import PrivateRoute from '../components/PrivateRoute';
 import * as Icon from 'react-bootstrap-icons';
 import { Form, Button, Row, Container, Card, Col, ListGroup, InputGroup, Image } from 'react-bootstrap';
 
-const socket = io('http://localhost:3001');
+const socket = io('http://localhost:3001', {
+    auth: {
+        token: localStorage.getItem('token')
+    }
+});
 
 export default function Chat() {
     const { user, logout } = useAuth();
     const [users, setUsers] = useState([]);
     const [message, setMessage] = useState('');
+    const [chatLogged, setChatLogged] = useState('');
     const [listMessages, setListMessages] = useState([]);
     const [userActive, setUserActive] = useState({ id: '', name: '', username: '' });
 
@@ -24,10 +29,6 @@ export default function Chat() {
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
-        socket.on('previousMessages', (messages) => {
-            setListMessages(messages);
-        });
-
         socket.on('newMessage', (message) => {
             setListMessages((prevMessages) => [...prevMessages, message]);
         });
@@ -35,7 +36,6 @@ export default function Chat() {
         fetchUsers();
 
         return () => {
-            socket.off('previousMessages');
             socket.off('newMessage');
         };
     }, []);
@@ -77,7 +77,11 @@ export default function Chat() {
                 return showToast('Erro', 'Erro ao carregar o chat', 'warning', 10000);
             }
 
-            const { messages } = await res.json();
+            const { id, messages } = await res.json();
+
+            setChatLogged(id);
+
+            socket.emit('joinChat', id);
 
             setUserActive(user);
             setListMessages(messages);
@@ -88,28 +92,8 @@ export default function Chat() {
 
     const sendMessage = async () => {
         try {
-            const url = `http://localhost:3001/chat/${userActive.id}/message`;
-
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem('token')}`,
-                },
-                body: JSON.stringify({
-                    message
-                })
-            });
-
-            if (!res.ok) {
-                return showToast('Erro', 'Erro ao enviar mesnagem', 'warning', 10000);
-            }
-
-            setListMessages(listMessages => [...listMessages, {
-                sender: user.id,
-                content: message,
-                timestamp: moment().format()
-            }]);
+            const messageData = { chatId: chatLogged, content: message };
+            socket.emit('sendMessage', messageData);
             setMessage('');
         } catch (err) {
             return showToast('Erro', `Erro: ${err?.message}`, 'warning', 10000);
