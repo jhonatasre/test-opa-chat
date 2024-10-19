@@ -31,19 +31,16 @@ Certifique-se de ter os seguintes itens instalados em sua máquina:
 
 - **Mongo Express** (interface gráfica para gerenciar o MongoDB):  
   Acesse: [http://localhost:8081](http://localhost:8081)
+  - **Usuário**: `admin`
+  - **Senha**: `pass`
 
-  Usuário: `admin`
-  Senha: `pass`
+- **MongoDB**:  
+  O MongoDB estará acessível na porta `27017`. Para conectar-se ao MongoDB a partir de um cliente, utilize as seguintes credenciais:
+  - **Usuário**: `root`
+  - **Senha**: `passwordroot`
   
 - **API Backend**:  
-  A API estará disponível em: `http://localhost:3001`
+  A API estará disponível em: [http://localhost:3001](http://localhost:3001)
 
 - **Frontend da Aplicação**:  
   Acesse a aplicação em: [http://localhost:3000](http://localhost:3000)
-
-## Fontes de Referência
-
-- **Next.js**: Para manipulação de parâmetros de busca no Next.js, veja [useSearchParams](https://nextjs.org/docs/app/api-reference/functions/use-search-params).
-- **React Bootstrap**: Para validação de formulários no React Bootstrap, consulte [Form Validation](https://react-bootstrap.netlify.app/docs/forms/validation/).
-- **Mongoose**: Para aprender mais sobre consultas no MongoDB usando Mongoose, veja [Mongoose Queries](https://mongoosejs.com/docs/queries.html).
-- **Passport.js**: Para autenticação em Node.js, consulte [Passport.js](https://www.passportjs.org/).
