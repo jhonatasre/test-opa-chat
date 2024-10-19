@@ -17,7 +17,6 @@ class Chat {
                     },
                     content: {
                         type: String,
-                        required: true,
                     },
                     timestamp: {
                         type: Date,

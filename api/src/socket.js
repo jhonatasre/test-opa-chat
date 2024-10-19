@@ -39,6 +39,7 @@ class SocketServer {
         });
 
         this.io.use(authenticateSocket);
+        this.activeUsers = {};
         this.initialize();
     }
 
@@ -72,9 +73,8 @@ class SocketServer {
 
                     await chat.save();
 
-                    console.log('chatId', chatId);
-
                     this.io.to(chatId).emit('newMessage', {
+                        id: chatId,
                         sender: socket.user.id,
                         content,
                         timestamp: Date.now()
@@ -82,8 +82,23 @@ class SocketServer {
                 }
             });
 
+            socket.on('login', async () => {
+                this.activeUsers[socket.user.id] = socket.user.id;
+                this.io.emit('activeUsers', Object.values(this.activeUsers));
+            });
+
+            socket.on('logout', () => {
+                console.log(`-- Cliente deslogou: ${socket.id}`);
+
+                delete this.activeUsers[socket.user.id];
+                this.io.emit('activeUsers', Object.values(this.activeUsers));
+            });
+
             socket.on('disconnecting', () => {
                 console.log(`-- Cliente desconectado: ${socket.id}`);
+
+                delete this.activeUsers[socket.user.id];
+                this.io.emit('activeUsers', Object.values(this.activeUsers));
             });
 
             socket.on('error', () => {
