@@ -29,18 +29,18 @@ Certifique-se de ter os seguintes itens instalados em sua máquina:
 
 ### Acessar a Aplicação
 
-- **Mongo Express** (interface gráfica para gerenciar o MongoDB):  
-  Acesse: [http://localhost:8081](http://localhost:8081)
-  - **Usuário**: `admin`
-  - **Senha**: `pass`
+- **Frontend da Aplicação**:  
+  Acesse a aplicação em: [http://localhost:3000](http://localhost:3000)
+
+- **API Backend**:  
+  A API estará disponível em: [http://localhost:3001](http://localhost:3001)
 
 - **MongoDB**:  
   O MongoDB estará acessível na porta `27017`. Para conectar-se ao MongoDB a partir de um cliente, utilize as seguintes credenciais:
   - **Usuário**: `root`
   - **Senha**: `passwordroot`
-  
-- **API Backend**:  
-  A API estará disponível em: [http://localhost:3001](http://localhost:3001)
 
-- **Frontend da Aplicação**:  
-  Acesse a aplicação em: [http://localhost:3000](http://localhost:3000)
+- **Mongo Express** (interface gráfica para gerenciar o MongoDB):  
+  Acesse: [http://localhost:8081](http://localhost:8081)
+  - **Usuário**: `admin`
+  - **Senha**: `pass`
