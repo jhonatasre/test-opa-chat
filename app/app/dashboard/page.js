@@ -211,66 +211,71 @@ export default function Chat() {
                                             </ListGroup>
                                         </Col>
                                         <Col md={8} className="d-flex flex-column justify-content-between">
-                                            <div className="flex-grow-1">
-                                                <Row className="mb-2">
-                                                    <Col xs={1} className="d-flex flex-column justify-content-center">
-                                                        <Image src={`https://www.gravatar.com/avatar/${md5(userActive.username)}?d=identicon`} roundedCircle fluid />
-                                                    </Col>
-                                                    <Col xs={11}>
-                                                        <span><Icon.CircleFill className={activeUsers.indexOf(user.id) >= 0 ? 'text-success' : 'text-danger'} /> {userActive.name}</span><br />
-                                                        <small>@{userActive.username}</small>
-                                                    </Col>
-                                                </Row>
-                                                <Row className="flex-grow-1 h-100">
-                                                    <Col xs={12} className="flex-grow-1 h-100" >
-                                                        <div
-                                                            className="overflow-x-hidden overflow-y-auto"
-                                                            style={{
-                                                                backgroundColor: '#F2F2F2',
-                                                                borderRadius: '1rem',
-                                                                height: 'calc(67vh - 70px)',
-                                                                padding: '15px 10px'
-                                                            }}>
-                                                            {listMessages.map(message => (
-                                                                <Row key={message._id} className="mb-2">
-                                                                    <Col className={
-                                                                        `d-flex ${message.sender == user.id ? 'justify-content-end text-end' : ''}`
-                                                                    }>
-                                                                        <Card className={`${message.sender == user.id ? 'bg-primary text-light' : ''}`}>
-                                                                            <Card.Body>
-                                                                                {message.content}<br />
-                                                                                <small>
-                                                                                    {moment(message.timestamp).isSame(moment(), 'day') ? (
-                                                                                        "Hoje"
-                                                                                    ) : moment(message.timestamp).isSame(moment().subtract(1, 'days'), 'day') ? (
-                                                                                        "Ontem"
-                                                                                    ) : (
-                                                                                        moment(message.timestamp).format('DD/MM/YYYY')
-                                                                                    )} - {moment(message.timestamp).format('HH:mm')}
-                                                                                </small>
-                                                                            </Card.Body>
-                                                                        </Card>
-                                                                    </Col>
-                                                                </Row>
-                                                            ))}
-                                                            <div ref={messagesEndRef} />
+                                            {
+                                                !userActive.id ? <></> :
+                                                    <>
+                                                        <div className="flex-grow-1">
+                                                            <Row className="mb-2">
+                                                                <Col xs={1} className="d-flex flex-column justify-content-center">
+                                                                    <Image src={`https://www.gravatar.com/avatar/${md5(userActive.username)}?d=identicon`} roundedCircle fluid />
+                                                                </Col>
+                                                                <Col xs={11}>
+                                                                    <span><Icon.CircleFill className={activeUsers.indexOf(user.id) >= 0 ? 'text-success' : 'text-danger'} /> {userActive.name}</span><br />
+                                                                    <small>@{userActive.username}</small>
+                                                                </Col>
+                                                            </Row>
+                                                            <Row className="flex-grow-1 h-100">
+                                                                <Col xs={12} className="flex-grow-1 h-100" >
+                                                                    <div
+                                                                        className="overflow-x-hidden overflow-y-auto"
+                                                                        style={{
+                                                                            backgroundColor: '#F2F2F2',
+                                                                            borderRadius: '1rem',
+                                                                            height: 'calc(67vh - 70px)',
+                                                                            padding: '15px 10px'
+                                                                        }}>
+                                                                        {listMessages.map(message => (
+                                                                            <Row key={message._id} className="mb-2">
+                                                                                <Col className={
+                                                                                    `d-flex ${message.sender == user.id ? 'justify-content-end text-end' : ''}`
+                                                                                }>
+                                                                                    <Card className={`${message.sender == user.id ? 'bg-primary text-light' : ''}`}>
+                                                                                        <Card.Body>
+                                                                                            {message.content}<br />
+                                                                                            <small>
+                                                                                                {moment(message.timestamp).isSame(moment(), 'day') ? (
+                                                                                                    "Hoje"
+                                                                                                ) : moment(message.timestamp).isSame(moment().subtract(1, 'days'), 'day') ? (
+                                                                                                    "Ontem"
+                                                                                                ) : (
+                                                                                                    moment(message.timestamp).format('DD/MM/YYYY')
+                                                                                                )} - {moment(message.timestamp).format('HH:mm')}
+                                                                                            </small>
+                                                                                        </Card.Body>
+                                                                                    </Card>
+                                                                                </Col>
+                                                                            </Row>
+                                                                        ))}
+                                                                        <div ref={messagesEndRef} />
+                                                                    </div>
+                                                                </Col>
+                                                            </Row>
                                                         </div>
-                                                    </Col>
-                                                </Row>
-                                            </div>
-                                            <InputGroup className="mb-3">
-                                                <Form.Control
-                                                    as="textarea"
-                                                    placeholder="Mensagem..."
-                                                    aria-describedby="send-message"
-                                                    style={{ resize: 'none' }}
-                                                    value={message}
-                                                    onChange={(e) => setMessage(e.target.value)}
-                                                />
-                                                <Button variant="outline-primary" id="send-message" onClick={() => sendMessage()}>
-                                                    <Icon.SendFill className="ms-2 me-2 fs-3" />
-                                                </Button>
-                                            </InputGroup>
+                                                        <InputGroup className="mb-3">
+                                                            <Form.Control
+                                                                as="textarea"
+                                                                placeholder="Mensagem..."
+                                                                aria-describedby="send-message"
+                                                                style={{ resize: 'none' }}
+                                                                value={message}
+                                                                onChange={(e) => setMessage(e.target.value)}
+                                                            />
+                                                            <Button variant="outline-primary" id="send-message" onClick={() => sendMessage()}>
+                                                                <Icon.SendFill className="ms-2 me-2 fs-3" />
+                                                            </Button>
+                                                        </InputGroup>
+                                                    </>
+                                            }
                                         </Col>
                                     </Row>
                                 </Card.Body>
