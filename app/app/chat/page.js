@@ -14,7 +14,8 @@ import { Form, Button, Row, Container, Card, Col, ListGroup, InputGroup, Image }
 const socket = io('http://localhost:3001', {
     auth: {
         token: localStorage.getItem('token')
-    }
+    },
+    transports: ['websocket', 'polling'],
 });
 
 export default function Chat() {
@@ -47,6 +48,10 @@ export default function Chat() {
             }
         });
 
+        socket.on('addListUser', (user) => {
+            setUsers((prevUsers) => [...prevUsers, user]);
+        });
+
         socket.on('activeUsers', (users) => {
             setActiveUsers(users);
         });
@@ -57,6 +62,7 @@ export default function Chat() {
 
         return () => {
             socket.off('newMessage');
+            socket.off('addListUser');
             socket.off('activeUsers');
             socket.off('notificationNewMessage');
         };
@@ -72,6 +78,7 @@ export default function Chat() {
         try {
             const res = await fetch('http://localhost:3001/user', {
                 headers: {
+                    'Content-Type': 'application/json',
                     Authorization: `Bearer ${localStorage.getItem('token')}`,
                 },
             });
@@ -101,6 +108,7 @@ export default function Chat() {
         try {
             const res = await fetch(`http://localhost:3001/chat/${user.id}`, {
                 headers: {
+                    'Content-Type': 'application/json',
                     Authorization: `Bearer ${localStorage.getItem('token')}`,
                 },
             });
@@ -185,7 +193,7 @@ export default function Chat() {
                                 </Card.Header>
                                 <Card.Body className="m-0">
                                     <Row className="h-vh-75">
-                                        <Col md={4}>
+                                        <Col md={4} className="overflow-x-hidden overflow-y-auto" style={{ height: 'calc(37px + 67vh)' }}>
                                             <ListGroup>
                                                 {users.map((user) => (
                                                     <ListGroup.Item key={user.id} className={`${user.id == userActive.id ? 'bg-info text-dark' : ''}`} action onClick={() => handleSelectUser(user)}>

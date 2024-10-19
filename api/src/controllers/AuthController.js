@@ -16,6 +16,12 @@ class AuthController {
             newUser = await User.model({ name, username, password });
             newUser = await newUser.save();
 
+            req.app.get('socket').io.emit('addListUser', {
+                id: newUser.id,
+                name: name,
+                username: username
+            });
+
             const token = User.generateJWT(newUser);
             res.status(201).json({ token });
         } catch (err) {

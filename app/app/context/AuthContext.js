@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }) => {
         if (token) {
             fetch('http://locahost:3001/auth/profile', {
                 headers: {
+                    'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
             }).then(response => {
@@ -63,6 +64,7 @@ export const AuthProvider = ({ children }) => {
 
             const resUserData = await fetch('http://localhost:3001/auth/profile', {
                 headers: {
+                    'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
             });

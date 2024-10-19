@@ -9,6 +9,7 @@ const authMiddleware = require('./middlewares/auth');
 const router = Router();
 
 router.get('/', (req, res) => {
+    console.log('--- Ai pai para!');
     res.status(200).json({ status: 'ok' });
 });
 
@@ -19,6 +20,5 @@ router.get('/auth/profile', authMiddleware, AuthController.getProfile);
 router.get('/user', authMiddleware, UserController.get);
 
 router.get('/chat/:id', authMiddleware, ChatController.get);
-router.post('/chat/:id/message', authMiddleware, ChatController.sendMessage);
 
 module.exports = router;

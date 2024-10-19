@@ -9,6 +9,7 @@ import { Form, Button, Row, Container, Card, Col } from 'react-bootstrap';
 
 import * as yup from 'yup';
 import * as formik from 'formik';
+import * as Icon from 'react-bootstrap-icons';
 
 export default function Register() {
     const { Formik } = formik;

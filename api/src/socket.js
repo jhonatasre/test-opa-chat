@@ -2,47 +2,54 @@ const jwt = require('jsonwebtoken');
 const User = require('./models/User');
 const Chat = require('./models/Chat');
 const { Server } = require('socket.io');
-
-const authenticateSocket = (socket, next) => {
-    const token = socket.handshake.auth.token;
-
-    if (!token) {
-        return next(new Error('Autenticação necessária.'));
-    }
-
-    jwt.verify(token, (process.env.JWT_SECRET || 'my-secret-jwt-token'), async (err, decoded) => {
-        if (err) {
-            return next(new Error('Token inválido.'));
-        }
-
-        try {
-            const user = await User.model.findById(decoded.id);
-            if (!user) {
-                return next(new Error('Usuário não encontrado.'));
-            }
-
-            socket.user = user;
-            next();
-        } catch (error) {
-            return next(new Error('Erro ao buscar usuário.'));
-        }
-    });
-};
+const { createClient } = require('redis');
+const { createAdapter } = require('@socket.io/redis-streams-adapter');
 
 class SocketServer {
     constructor(server) {
+        this.redisClient = createClient({ url: "redis://redis:6379" });
+        this.redisClient.connect().catch(err => {
+            console.log('!!! Erro ao conectar ao Redis:', err);
+        });
+
         this.io = new Server(server, {
+            adapter: createAdapter(this.redisClient),
             cors: {
                 origin: "*",
-                credentials: true
+                credentials: true,
+                allowedHeaders: ['Authorization'],
             }
         });
 
-        this.io.use(authenticateSocket);
-        this.activeUsers = {};
-        this.sessionsUsers = {};
+        this.io.use(this.authenticateSocket);
         this.initialize();
     }
+
+    authenticateSocket(socket, next) {
+        const token = socket.handshake.auth.token;
+
+        if (!token) {
+            return next(new Error('Autenticação necessária.'));
+        }
+
+        jwt.verify(token, (process.env.JWT_SECRET || 'my-secret-jwt-token'), async (err, decoded) => {
+            if (err) {
+                return next(new Error('Token inválido.'));
+            }
+
+            try {
+                const user = await User.model.findById(decoded.id);
+                if (!user) {
+                    return next(new Error('Usuário não encontrado.'));
+                }
+
+                socket.user = user;
+                next();
+            } catch (error) {
+                return next(new Error('Erro ao buscar usuário.'));
+            }
+        });
+    };
 
     initialize() {
         this.io.on('connection', (socket) => {
@@ -71,11 +78,9 @@ class SocketServer {
                         sender: socket.user.id,
                         content: content
                     });
-
                     await chat.save();
 
                     const lastMessage = chat.messages[chat.messages.length - 1];
-
                     this.io.to(chatId).emit('newMessage', {
                         _id: lastMessage._id,
                         sender: socket.user.id,
@@ -85,9 +90,10 @@ class SocketServer {
 
                     let otherParticipantId = chat.participants.filter(p => !p._id.equals(socket.user.id));
                     otherParticipantId = otherParticipantId[0]._id.toString();
+                    const participantSocketId = await this.getParticipantSocketId(otherParticipantId);
 
-                    if (this.sessionsUsers[otherParticipantId]) {
-                        this.sessionsUsers[otherParticipantId].emit('notificationNewMessage', {
+                    if (participantSocketId) {
+                        this.io.to(participantSocketId).emit('notificationNewMessage', {
                             sender: socket.user.id,
                             title: socket.user.name,
                             content
@@ -97,26 +103,48 @@ class SocketServer {
             });
 
             socket.on('login', async () => {
-                this.activeUsers[socket.user.id] = socket.user.id;
-                this.sessionsUsers[socket.user.id] = socket;
+                if (!this.redisClient) {
+                    console.error('!!! --- redisClient não está definido.');
+                    return;
+                }
 
-                this.io.emit('activeUsers', Object.values(this.activeUsers));
+                await this.redisClient.sAdd('activeUsers', socket.user.id);
+                await this.redisClient.hSet('sessionsUsers', socket.user.id, socket.id);
+
+                const activeUsers = await this.getActiveUsers();
+                this.io.emit('activeUsers', activeUsers);
             });
 
-            socket.on('error', () => this._disconectUser(socket));
-            socket.on('logout', () => this._disconectUser(socket));
-            socket.on('disconnecting', () => this._disconectUser(socket));
-            socket.on('connect_error', (err) => this._disconectUser(socket, `Erro na conexão (${err.message})`));
+            socket.on('error', () => this.disconnectUser(socket));
+            socket.on('logout', () => this.disconnectUser(socket));
+            socket.on('disconnecting', () => this.disconnectUser(socket));
+            socket.on('connect_error', (err) => this.disconnectUser(socket, `Erro na conexão (${err.message})`));
         });
     }
 
-    _disconectUser(socket, message = 'Cliente desconectado') {
+    async getParticipantSocketId(participantId) {
+        try {
+            const socketId = await this.redisClient.hGet('sessionsUsers', participantId);
+            return socketId;
+        } catch (error) {
+            console.error('Erro ao obter socketId do participante:', error);
+            return null;
+        }
+    }
+
+    async getActiveUsers() {
+        const users = await this.redisClient.sMembers('activeUsers');
+        return users;
+    }
+
+    async disconnectUser(socket, message = 'Cliente desconectado') {
         console.log(`-- ${message}: ${socket.id}`);
 
-        delete this.activeUsers[socket.user.id];
-        delete this.sessionsUsers[socket.user.id];
+        await this.redisClient.sRem('activeUsers', socket.user.id);
+        await this.redisClient.hDel('sessionsUsers', socket.user.id);
 
-        this.io.emit('activeUsers', Object.values(this.activeUsers));
+        const activeUsers = await this.getActiveUsers();
+        this.io.emit('activeUsers', activeUsers);
     }
 
     getIO() {
