@@ -32,7 +32,7 @@ export default function Register() {
 
     useEffect(() => {
         if (isAuthenticated()) {
-            router.push('/chat');
+            router.push('/dashboard');
         }
     }, [isAuthenticated]);
 

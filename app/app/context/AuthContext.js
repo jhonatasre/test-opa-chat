@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }) => {
 
             setUser(user);
 
-            router.push('/chat');
+            router.push('/dashboard');
         } catch (err) {
             throw new Error(err.message || 'Erro no processo de login');
         }

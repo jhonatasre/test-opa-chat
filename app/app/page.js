@@ -34,7 +34,7 @@ export default function Home() {
 
         try {
             await login(username, password);
-            router.push('/chat');
+            router.push('/dashboard');
             showToast({
                 title: 'Sucesso!',
                 message: 'Login feito com sucesso!',
