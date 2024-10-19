@@ -5,17 +5,28 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
-import { Form, Button, Row, Container, Card, Col } from 'react-bootstrap';
+import { Form, Button, Row, Container, Card, Col, InputGroup } from 'react-bootstrap';
 
 import * as yup from 'yup';
 import * as formik from 'formik';
 import * as Icon from 'react-bootstrap-icons';
+import * as api from '../services/apiService';
 
 export default function Register() {
     const { Formik } = formik;
 
     const { showToast } = useToast();
     const { isAuthenticated } = useAuth();
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const togglePsswordConfirmVisibility = () => {
+        setShowPasswordConfirm(!showPasswordConfirm);
+    };
 
     const router = useRouter();
 
@@ -40,16 +51,9 @@ export default function Register() {
         const { name, username, password } = values;
 
         try {
-            const res = await fetch('http://localhost:3001/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name,
-                    username,
-                    password
-                }),
+            const res = await api.post({
+                endpoint: '/auth/register',
+                body: { name, username, password },
             });
 
             if (res.ok) {
@@ -139,34 +143,50 @@ export default function Register() {
                                         </Form.Group>
 
                                         <Row>
-                                            <Form.Group className="mb-3" as={Col} md={6}>
+                                            <Form.Group className="mb-3">
                                                 <Form.Label>Senha</Form.Label>
-                                                <Form.Control
-                                                    type="password"
-                                                    name="password"
-                                                    placeholder="Senha"
-                                                    value={values.password}
-                                                    onChange={handleChange}
-                                                    isInvalid={!!errors.password}
-                                                />
-                                                <Form.Control.Feedback type="invalid">
-                                                    {errors.password}
-                                                </Form.Control.Feedback>
+                                                <InputGroup>
+                                                    <Form.Control
+                                                        type={showPassword ? "text" : "password"}
+                                                        name="password"
+                                                        placeholder="Senha"
+                                                        value={values.password}
+                                                        onChange={handleChange}
+                                                        isInvalid={!!errors.password}
+                                                    />
+                                                    <Button
+                                                        variant="outline-secondary"
+                                                        onClick={togglePasswordVisibility}
+                                                    >
+                                                        {showPassword ? <Icon.EyeSlash /> : <Icon.Eye />}
+                                                    </Button>
+                                                    <Form.Control.Feedback type="invalid">
+                                                        {errors.password}
+                                                    </Form.Control.Feedback>
+                                                </InputGroup>
                                             </Form.Group>
 
-                                            <Form.Group className="mb-3" as={Col} md={6}>
-                                                <Form.Label>Confirme a Senha</Form.Label>
-                                                <Form.Control
-                                                    type="password"
-                                                    name="password_confirm"
-                                                    placeholder="Confirme a Senha"
-                                                    value={values.password_confirm}
-                                                    onChange={handleChange}
-                                                    isInvalid={!!errors.password_confirm}
-                                                />
-                                                <Form.Control.Feedback type="invalid">
-                                                    {errors.password_confirm}
-                                                </Form.Control.Feedback>
+                                            <Form.Group className="mb-3">
+                                                <Form.Label>Confirmar Senha</Form.Label>
+                                                <InputGroup>
+                                                    <Form.Control
+                                                        type={showPasswordConfirm ? "text" : "password"}
+                                                        name="password_confirm"
+                                                        placeholder="Confirmar Senha"
+                                                        value={values.password_confirm}
+                                                        onChange={handleChange}
+                                                        isInvalid={!!errors.password_confirm}
+                                                    />
+                                                    <Button
+                                                        variant="outline-secondary"
+                                                        onClick={togglePsswordConfirmVisibility}
+                                                    >
+                                                        {showPasswordConfirm ? <Icon.EyeSlash /> : <Icon.Eye />}
+                                                    </Button>
+                                                    <Form.Control.Feedback type="invalid">
+                                                        {errors.password_confirm}
+                                                    </Form.Control.Feedback>
+                                                </InputGroup>
                                             </Form.Group>
                                         </Row>
 
@@ -178,11 +198,11 @@ export default function Register() {
                             </Formik>
                         </Card.Body>
                         <Card.Footer
-                            className="text-muted text-center"
+                            className="text-muted text-center cursor-pointer"
                             onClick={() => router.push('/')}
-                            style={{ padding: 15, cursor: 'pointer' }}
+                            style={{ padding: 15 }}
                         >
-                            Já possuo cadastro
+                            <span className="text-primary">Já possuo cadastro</span>
                         </Card.Footer>
                     </Card>
                 </Col>

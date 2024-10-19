@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './context/AuthContext';
 import { useToast } from './context/ToastContext';
 
 import * as Icon from 'react-bootstrap-icons';
-import { Form, Button, Row, Container, Card, Col } from 'react-bootstrap';
+import { Form, Button, Row, Container, Card, Col, InputGroup } from 'react-bootstrap';
 
 import * as yup from 'yup';
 import * as formik from 'formik';
@@ -16,7 +16,8 @@ export default function Home() {
 
     const router = useRouter();
     const { showToast } = useToast();
-    const { login, loading, isAuthenticated } = useAuth();
+    const { login, isAuthenticated } = useAuth();
+    const [showPassword, setShowPassword] = useState(false);
 
     const schema = yup.object().shape({
         username: yup.string().required('Informe o nome do seu usuário.'),
@@ -24,10 +25,14 @@ export default function Home() {
     });
 
     useEffect(() => {
-        if (!loading && !isAuthenticated()) {
+        if (!isAuthenticated()) {
             router.push('/');
         }
-    }, [loading]);
+    }, []);
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
+    };
 
     const handleSubmit = async (values) => {
         const { username, password } = values;
@@ -94,17 +99,25 @@ export default function Home() {
 
                                         <Form.Group className="mb-3">
                                             <Form.Label>Senha</Form.Label>
-                                            <Form.Control
-                                                type="password"
-                                                name="password"
-                                                placeholder="Senha"
-                                                value={values.password}
-                                                onChange={handleChange}
-                                                isInvalid={!!errors.password}
-                                            />
-                                            <Form.Control.Feedback type="invalid">
-                                                {errors.password}
-                                            </Form.Control.Feedback>
+                                            <InputGroup>
+                                                <Form.Control
+                                                    type={showPassword ? "text" : "password"}
+                                                    name="password"
+                                                    placeholder="Senha"
+                                                    value={values.password}
+                                                    onChange={handleChange}
+                                                    isInvalid={!!errors.password}
+                                                />
+                                                <Button
+                                                    variant="outline-secondary"
+                                                    onClick={togglePasswordVisibility}
+                                                >
+                                                    {showPassword ? <Icon.EyeSlash /> : <Icon.Eye />}
+                                                </Button>
+                                                <Form.Control.Feedback type="invalid">
+                                                    {errors.password}
+                                                </Form.Control.Feedback>
+                                            </InputGroup>
                                         </Form.Group>
 
                                         <Button variant="outline-dark" type="submit" className="w-100">
@@ -116,11 +129,11 @@ export default function Home() {
                             </Formik>
                         </Card.Body>
                         <Card.Footer
-                            className="text-muted text-center"
+                            className="text-muted text-center cursor-pointer"
                             onClick={() => router.push('/register')}
-                            style={{ padding: 15, cursor: 'pointer' }}
+                            style={{ padding: 15 }}
                         >
-                            Criar uma nova conta
+                            <span className="text-primary">Criar uma nova conta</span>
                         </Card.Footer>
                     </Card>
                 </Col>

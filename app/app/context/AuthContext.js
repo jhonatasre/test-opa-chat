@@ -3,56 +3,49 @@
 import { useRouter } from 'next/navigation';
 import { createContext, useContext, useState, useEffect } from 'react';
 
+import * as api from '../services/apiService';
+
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [logged, setLogged] = useState(null);
     const router = useRouter();
 
     useEffect(() => {
-        if (!loading && !user) {
+        if (!logged) {
             router.push('/');
         }
-    }, [user, loading, router]);
+    }, [logged, router]);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
 
         if (token) {
-            fetch('http://locahost:3001/auth/profile', {
+            api.get({
+                endpoint: '/auth/profile',
                 headers: {
-                    'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
             }).then(response => {
-
-                setUser(response.data.user);
-
+                setLogged(response.data.user);
             }).catch(() => {
-
                 localStorage.removeItem('token');
-                setUser(null);
+                setLogged(null);
 
-            }).finally(() => setLoading(false));
-        } else {
-            setLoading(false);
+            });
         }
     }, []);
 
     const login = async (username, password) => {
         try {
-            const res = await fetch('http://localhost:3001/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
+            const res = await api.post({
+                endpoint: '/auth/login',
+                body: {
                     username,
                     password,
-                }),
+                },
             });
 
             if (!res.ok) {
@@ -62,11 +55,11 @@ export const AuthProvider = ({ children }) => {
             const { token } = await res.json();
             localStorage.setItem('token', token);
 
-            const resUserData = await fetch('http://localhost:3001/auth/profile', {
+            const resUserData = await api.get({
+                endpoint: '/auth/profile',
                 headers: {
-                    'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
-                },
+                }
             });
 
             if (!resUserData.ok) {
@@ -75,7 +68,7 @@ export const AuthProvider = ({ children }) => {
 
             const { user } = await resUserData.json();
 
-            setUser(user);
+            setLogged(user);
 
             router.push('/dashboard');
         } catch (err) {
@@ -86,15 +79,15 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         router.push('/');
         localStorage.removeItem('token');
-        setUser(null);
+        setLogged(null);
     };
 
     const isAuthenticated = () => {
-        return !!user;
+        return !!logged;
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated }}>
+        <AuthContext.Provider value={{ logged, login, logout, isAuthenticated }}>
             {children}
         </AuthContext.Provider>
     );

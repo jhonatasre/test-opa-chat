@@ -1,27 +1,28 @@
 'use client';
 
 import md5 from 'md5';
-import moment from 'moment';
-import io from 'socket.io-client';
+import Chat from '../components/Chat';
+import UserList from '../components/UserList';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useEffect, useState, useRef } from 'react';
 import PrivateRoute from '../components/PrivateRoute';
+import { Row, Container, Card, Col, Image, Dropdown } from 'react-bootstrap';
+import {
+    initSocketListeners,
+    emitLogin,
+    emitLogout,
+    joinChat,
+    sendMessage,
+    cleanupListeners
+} from '../services/socketService';
 
 import * as Icon from 'react-bootstrap-icons';
-import { Form, Button, Row, Container, Card, Col, ListGroup, InputGroup, Image } from 'react-bootstrap';
+import * as api from '../services/apiService';
 
-const socket = io('http://localhost:3001', {
-    auth: {
-        token: localStorage.getItem('token')
-    },
-    transports: ['websocket', 'polling'],
-});
-
-export default function Chat() {
-    const { user, logout } = useAuth();
+export default function Dashboard() {
+    const { logged, logout } = useAuth();
     const [users, setUsers] = useState([]);
-    const [message, setMessage] = useState('');
     const [chatLogged, setChatLogged] = useState('');
     const [activeUsers, setActiveUsers] = useState([]);
     const [listMessages, setListMessages] = useState([]);
@@ -31,40 +32,13 @@ export default function Chat() {
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
-        socket.on('newMessage', (message) => {
-            setListMessages((prevMessages) => [...prevMessages, message]);
-        });
-
-        socket.on('notificationNewMessage', (message) => {
-            const { title, content, sender } = message;
-
-            if (sender != userActive.id) {
-                return showToast({
-                    title,
-                    message: content,
-                    type: 'info',
-                    icon: <Icon.PersonFill className="me-2" />
-                });
-            }
-        });
-
-        socket.on('addListUser', (user) => {
-            setUsers((prevUsers) => [...prevUsers, user]);
-        });
-
-        socket.on('activeUsers', (users) => {
-            setActiveUsers(users);
-        });
-
-        socket.emit('login');
+        initSocketListeners(setListMessages, setUsers, setActiveUsers, userActive, showToast);
+        emitLogin();
 
         fetchUsers();
 
         return () => {
-            socket.off('newMessage');
-            socket.off('addListUser');
-            socket.off('activeUsers');
-            socket.off('notificationNewMessage');
+            cleanupListeners();
         };
     }, [userActive]);
 
@@ -76,11 +50,11 @@ export default function Chat() {
 
     const fetchUsers = async () => {
         try {
-            const res = await fetch('http://localhost:3001/user', {
+            const res = await api.get({
+                endpoint: '/user',
                 headers: {
-                    'Content-Type': 'application/json',
                     Authorization: `Bearer ${localStorage.getItem('token')}`,
-                },
+                }
             });
 
             if (!res.ok) {
@@ -106,9 +80,9 @@ export default function Chat() {
 
     const handleSelectUser = async (user) => {
         try {
-            const res = await fetch(`http://localhost:3001/chat/${user.id}`, {
+            const res = await api.get({
+                endpoint: `/chat/${user.id}`,
                 headers: {
-                    'Content-Type': 'application/json',
                     Authorization: `Bearer ${localStorage.getItem('token')}`,
                 },
             });
@@ -124,10 +98,8 @@ export default function Chat() {
 
             const { id, messages } = await res.json();
 
+            joinChat(id);
             setChatLogged(id);
-
-            socket.emit('joinChat', id);
-
             setUserActive(user);
             setListMessages(messages);
         } catch (err) {
@@ -140,145 +112,77 @@ export default function Chat() {
         }
     }
 
-    const sendMessage = async () => {
-        try {
-            if (!message) {
-                return;
-            }
-
-            const messageData = { chatId: chatLogged, content: message };
-            socket.emit('sendMessage', messageData);
-            setMessage('');
-        } catch (err) {
-            return showToast({
-                title: 'Erro',
-                message: `Erro: ${err?.message}`,
-                type: 'danger',
-                icon: <Icon.XCircleFill className="me-2" />
-            });
+    const handleSendMessage = async (message) => {
+        if (message) {
+            sendMessage({ chatId: chatLogged, content: message });
         }
     }
 
     const handleLogout = async () => {
-        socket.emit('logout');
+        emitLogout();
         logout();
     }
 
     return (
         <PrivateRoute>
             {
-                !user ? <></> :
+                !logged ? <></> :
                     <div style={{ backgroundImage: "url('/img/background.jpg')" }} className="min-vh-100">
                         <Container className="d-flex w-100 flex-column justify-content-center min-vh-100">
                             <Card style={{ borderRadius: 35 }}>
+
                                 <Card.Header>
                                     <Row>
+                                        <Col xs={2} className="d-flex align-items-center">
+                                            <span className="fs-3">Mensagens</span>
+                                        </Col>
                                         <Col xs={10}>
                                             <Row>
-                                                <Col xs={2} lg={1}>
-                                                    <Image src={`https://www.gravatar.com/avatar/${md5(user.username)}?d=identicon`} roundedCircle fluid />
+                                                <Col xs={10} lg={11} className="d-flex flex-column justify-content-center text-end">
+                                                    <span>{logged.name}<Icon.CircleFill className="text-success ms-2" /></span><br />
+                                                    <small>@{logged.username}</small>
                                                 </Col>
-                                                <Col xs={10} lg={11} className="d-flex flex-column justify-content-center">
-                                                    <span><Icon.CircleFill className="text-success" /> {user.name}</span><br />
-                                                    <small>@{user.username}</small>
+                                                <Col xs={2} lg={1} className="text-end">
+                                                    <Dropdown align="end">
+                                                        <Dropdown.Toggle as={Image} src={`https://www.gravatar.com/avatar/${md5(logged.username)}?d=identicon`} roundedCircle fluid className="cursor-pointer" />
+                                                        <Dropdown.Menu>
+                                                            <Dropdown.Item onClick={handleLogout}>
+                                                                <Icon.Power className="me-2" /> Sair
+                                                            </Dropdown.Item>
+                                                        </Dropdown.Menu>
+                                                    </Dropdown>
                                                 </Col>
                                             </Row>
                                         </Col>
-                                        <Col xs={2} className="text-end align-items-center">
-                                            <Button onClick={() => handleLogout()} variant="link" size="lg" className="text-danger" title="Sair">
-                                                <Icon.Power className="font-weight-bolder fs-3" />
-                                            </Button>
-                                        </Col>
                                     </Row>
                                 </Card.Header>
+
                                 <Card.Body className="m-0">
                                     <Row className="h-vh-75">
                                         <Col md={4} className="overflow-x-hidden overflow-y-auto" style={{ height: 'calc(37px + 67vh)' }}>
-                                            <ListGroup>
-                                                {users.map((user) => (
-                                                    <ListGroup.Item key={user.id} className={`${user.id == userActive.id ? 'bg-info text-dark' : ''}`} action onClick={() => handleSelectUser(user)}>
-                                                        <Row>
-                                                            <Col xs={4} lg={2} className="d-flex flex-column justify-content-center">
-                                                                <Image src={`https://www.gravatar.com/avatar/${md5(user.username)}?d=identicon`} roundedCircle fluid />
-                                                            </Col>
-                                                            <Col xs={8} lg={10} className="d-flex flex-column justify-content-center">
-                                                                <span><Icon.CircleFill className={activeUsers.indexOf(user.id) >= 0 ? 'text-success' : 'text-danger'} /> {user.name}</span><br />
-                                                                <small>@{user.username}</small>
-                                                            </Col>
-                                                        </Row>
-                                                    </ListGroup.Item>
-                                                ))}
-                                            </ListGroup>
+                                            <UserList
+                                                users={users}
+                                                activeUsers={activeUsers}
+                                                userActive={userActive}
+                                                handleSelectUser={handleSelectUser}
+                                            />
                                         </Col>
                                         <Col md={8} className="d-flex flex-column justify-content-between">
                                             {
-                                                !userActive.id ? <></> :
-                                                    <>
-                                                        <div className="flex-grow-1">
-                                                            <Row className="mb-2">
-                                                                <Col xs={1} className="d-flex flex-column justify-content-center">
-                                                                    <Image src={`https://www.gravatar.com/avatar/${md5(userActive.username)}?d=identicon`} roundedCircle fluid />
-                                                                </Col>
-                                                                <Col xs={11}>
-                                                                    <span><Icon.CircleFill className={activeUsers.indexOf(user.id) >= 0 ? 'text-success' : 'text-danger'} /> {userActive.name}</span><br />
-                                                                    <small>@{userActive.username}</small>
-                                                                </Col>
-                                                            </Row>
-                                                            <Row className="flex-grow-1 h-100">
-                                                                <Col xs={12} className="flex-grow-1 h-100" >
-                                                                    <div
-                                                                        className="overflow-x-hidden overflow-y-auto"
-                                                                        style={{
-                                                                            backgroundColor: '#F2F2F2',
-                                                                            borderRadius: '1rem',
-                                                                            height: 'calc(67vh - 70px)',
-                                                                            padding: '15px 10px'
-                                                                        }}>
-                                                                        {listMessages.map(message => (
-                                                                            <Row key={message._id} className="mb-2">
-                                                                                <Col className={
-                                                                                    `d-flex ${message.sender == user.id ? 'justify-content-end text-end' : ''}`
-                                                                                }>
-                                                                                    <Card className={`${message.sender == user.id ? 'bg-primary text-light' : ''}`}>
-                                                                                        <Card.Body>
-                                                                                            {message.content}<br />
-                                                                                            <small>
-                                                                                                {moment(message.timestamp).isSame(moment(), 'day') ? (
-                                                                                                    "Hoje"
-                                                                                                ) : moment(message.timestamp).isSame(moment().subtract(1, 'days'), 'day') ? (
-                                                                                                    "Ontem"
-                                                                                                ) : (
-                                                                                                    moment(message.timestamp).format('DD/MM/YYYY')
-                                                                                                )} - {moment(message.timestamp).format('HH:mm')}
-                                                                                            </small>
-                                                                                        </Card.Body>
-                                                                                    </Card>
-                                                                                </Col>
-                                                                            </Row>
-                                                                        ))}
-                                                                        <div ref={messagesEndRef} />
-                                                                    </div>
-                                                                </Col>
-                                                            </Row>
-                                                        </div>
-                                                        <InputGroup className="mb-3">
-                                                            <Form.Control
-                                                                as="textarea"
-                                                                placeholder="Mensagem..."
-                                                                aria-describedby="send-message"
-                                                                style={{ resize: 'none' }}
-                                                                value={message}
-                                                                onChange={(e) => setMessage(e.target.value)}
-                                                            />
-                                                            <Button variant="outline-primary" id="send-message" onClick={() => sendMessage()}>
-                                                                <Icon.SendFill className="ms-2 me-2 fs-3" />
-                                                            </Button>
-                                                        </InputGroup>
-                                                    </>
+                                                !userActive.id ?
+                                                    <></> :
+                                                    <Chat
+                                                        handleSendMessage={handleSendMessage}
+                                                        logged={logged}
+                                                        onlines={activeUsers}
+                                                        messages={listMessages}
+                                                        userActive={userActive}
+                                                    />
                                             }
                                         </Col>
                                     </Row>
                                 </Card.Body>
+
                             </Card>
                         </Container>
                     </div>

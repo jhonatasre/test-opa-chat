@@ -8,3 +8,7 @@
 .toast.bg-danger .toast-body {
   color: #ffffff
 }
+
+.cursor-pointer {
+  cursor: pointer;
+}
