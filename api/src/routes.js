@@ -9,7 +9,6 @@ const authMiddleware = require('./middlewares/auth');
 const router = Router();
 
 router.get('/', (req, res) => {
-    console.log('--- Ai pai para!');
     res.status(200).json({ status: 'ok' });
 });
 
